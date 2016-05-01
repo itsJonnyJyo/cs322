@@ -1,0 +1,4 @@
+foreach j => p in [1,4,9] {
+    print j;
+    print p;
+  }

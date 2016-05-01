@@ -1,0 +1,18 @@
+procedure maxIndex(inp, ref out) {
+  out = 0;
+  var trash = 0;
+  var temp  = 0;
+  foreach i => v in inp {
+    if (temp < v) {
+      out = i;
+      temp = v;
+    }
+    else {
+      trash = v;
+    }
+  }
+  print out;
+}
+var out = 0;
+//maxIndex([4, 2, 6, 1], out);
+

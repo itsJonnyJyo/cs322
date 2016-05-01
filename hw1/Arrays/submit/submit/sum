@@ -1,0 +1,6 @@
+For this case, it is possible to summate an array of purely numbers,
+such as the first example [1,2,3], but not in the case of the second
+example, [1, [2,3], [[4]]]. The Interpreter evaluates this as an array
+consisting of an Int, a MultiValue and a SingleValue. When using '+' 
+in an attempt to add such values together, the overloaded plus operator
+will convert the Int to a SingleValue and concatenate all arrays. 

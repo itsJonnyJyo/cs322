@@ -1,0 +1,302 @@
+------------------------------------------------------------------------
+CS322 Languages and Compiler Design II                        Homework 2
+------------------------------------------------------------------------
+
+This homework is intended to give you some experience working with code
+generation, with particular emphasis on concepts of control flow.  The
+exercises described here are based on the compiler that was originally
+introduced in the Week 2 / DemoComp materials.  However, responding to
+multiple requests, the source language that we are working with now has
+an official name: "Stevie".  It could be that this language is named
+after Stevie Nicks, Stevie Wonder, or Stevie Ray Vaughan.  Or perhaps
+it's just because this language is a "Statically TypEd Variant of our
+Interpretour Example".  I'll leave you to decide, based on your own
+tastes for music and/or programming language design :-)
+
+The code in the file StevieComp.zip, available from D2L, provides the
+starting point for this assignment.
+
+------------------------------------------------------------------------
+BACKGROUND:
+
+As indicated in the text above, one feature of Stevie that distinguishes
+it from the previous variants that we've looked it is its reliance on
+static typing: every variable that is used in a Stevie program must be
+introduced by a variable declaration that also specifies the type of
+that variable.  A program in Stevie is represented by a list of zero or
+more statements:
+
+  stmts   ::= stmt*
+
+and most of the individual statements forms are things that you have
+seen before:
+
+  stmt    ::= <IDENT> "=" expr ";"
+           |  "if" "(" expr ")" block [ "else" block ]
+           |  "while" "(" expr ")" block
+           |  "print" expr ";"
+           |  vardecl ";"
+           |  "return" expr ";"
+           |  "do" block "while" "(" expr ")" ";"
+           |  "break" ";"
+           |  "continue" ";"
+           |  "switch" "(" expr ")" "{" case* "}"
+  case    ::= "case" <INTLIT> ":" stmts
+           |  "default" ":" stmts
+
+[In case it is not already clear, the grammar notation that we're using
+here: shows reserved words or punctuation symbols between double quotes;
+uses <...> for other tokens; uses the * symbol to denote a list of zero
+or more items; and uses [...] to indicate an optional item.]
+
+A block is either a single statement, or a list of statements surrounded
+by braces:
+
+  block   ::= stmt
+           |  "{" stmts "}"
+
+Variable declarations specify a type and a list of one or more variable
+introductions, each of which can include an optional initializer:
+
+  vardecl ::= type intro ("," intro)* ";"
+  intro   ::= <IDENT> [ "=" expr ]
+
+The variables that are introduced in a vardecl come in to scope as soon
+as they have been defined (so "int x=2, y=x+1;" will define "y" as "3")
+and do not go out of scope until either the end of the program (if they
+appear at the top-level) or to the end of the block in which they are
+defined.  Stevie currently supports only two types: "int" and "boolean".
+(Technically, the implementation also provides some support for array
+types.  However, you will not be expected to consider those here because
+there are no ways to construct array values in the current version of
+Stevie.)
+
+Some statement forms in Stevie are likely familiar to you from other
+programming languages, but have not been featured in previous variants
+of the Interpretour/DemoComp.  These include statements of the form
+"return e;" which will terminate the program passing back the value of
+the expression as a result.  (If execution reaches the end of the input
+program without a "return", then the result of the program is
+undefined.)  The other new statement forms (for "do ... while" loops;
+"break" and "continue" statements; and "switch" statements are described
+in more detail below.
+
+Stevie has almost the same set of expressions that you have seen in
+previous variants of this language except that (1) it leverages static
+typing to allow variables of type "boolean" as well as variables of
+type "int"; and (2) it includes short-circuiting versions of the familiar
+&& and || operators on boolean values in which the second operand is
+evaluated only if the final result cannot be determined from the value
+of the first operand.  You may notice, however, that the implementation
+of these last two operators is not yet complete ...
+
+Further details of the Stevie language may be discerned by studying the
+code in the file "Src.java"; you should recognize this as deriving from
+the Interpretour code that you have worked with previously, so it should
+already seem mostly familiar.  You are expected to read the Src.java
+code to answer questions about the names of the various abstract syntax
+classes that are used, the names of individual components, details of
+how static analysis (type checking) is performed etc.  You may also
+find it useful to consult the code in Parser.jj for further details of
+Stevie's grammar.
+
+The target language for the Stevie compiler that you will be using in
+this assignment is also a variant of the target machine that you have
+seen previously.  The primary difference is that it uses a simple array
+instead of a hash table to represent Memory values.  The static analysis
+portion of the compiler is responsible for assigning integer locations
+for each of the variables in the source program, and is able to use the
+same location for multiple variables if those two variables are not in
+scope at the same time.  For example, the variables "x" and "y" in the
+following code can be stored in the same memory location:
+
+  if (a>b) { int x = a-b; print x; } else { int y = b-a; print y; }
+
+As a special case, memory location 0 is reserved for saving the return
+value of the program.  To support this, the Stop instruction from the
+original Target language is replaced here with a new Ret instruction
+that takes a single register argument whose value will be used as the
+return value.
+
+Further details of the target language may be discerned by studying
+the code in the file "Target.java".  Please note that your solutions
+to this homework assignment should work with the original, unmodified
+version of "Target.java": you should not, for example, add any new
+instructions, or change the semantics of existing instructions in any
+way.  (You may make changes to the code in "Target.java" for the
+purposes of debugging or testing your solutions during development,
+but you should also ensure that your solution will work correctly
+with the original, unmodified version of "Target.java".)
+
+For those who are interested, there is also a preview version of a
+compiler for Stevie that emits x86_64 assembly code; please check the
+README.txt file in that package for further details, but note that this
+version of the compiler is NOT IN ANY WAY REQUIRED FOR HOMEWORK 2.
+
+------------------------------------------------------------------------
+ASSIGNMENT DETAILS:
+
+Your task in this assignment is to implement and test compilation
+schemes for translating each of the following constructs of the
+Stevie language into the Target language:
+
+a) [5 points]  do ... while loops
+b) [10 points] the && and || operators
+c) [10 points] the break and continue statements
+d) [15 points] the switch statement
+
+Some implementation notes for each of these parts are provided below.
+
+For each part, your answer should provide:
+
+- A description of the changes that you have made to the code in
+  Src.java to implement that feature.  This will typically require the
+  code for any compile() or compileTo() methods that you have written,
+  along with any additional code that you have had to write, and should
+  also summarize/describe any other changes that you have had to make to
+  other parts of the code in Src.java.  (You should not need to add or
+  modify code in any other files.)
+
+- A description of NO MORE THAN THREE TEST CASES that you have used to
+  check that your implementation is working correctly.  For each test
+  case, you should include: specific details of your test code and,
+  where appropriate, the test procedure that you are using; a statement
+  explaining why you have picked that particular test case, and what
+  aspects of your implementation it is expected to test; a description
+  of what behavior you expect; a statement explaining how the output
+  from your test demonstrates that your implementation is working
+  correctly.  To obtain full credit, you should try to pick three test
+  cases that exercise different aspects of your solution, and you should
+  not include test cases that are simple variants of one another.  To
+  the extent possible, you should try to avoid tests that are trivial
+  or deal only with unimportant details.  In other words, you should
+  prioritize testing for the most important aspects of each language
+  feature.  Note also that it is often possible to increase the coverage
+  of a single test case by placing code inside a loop that exercises
+  multiple variants of test in a single run.
+
+  [Note that each student is responsible for developing their own set
+  of test cases; students may discuss general characteristics of test
+  cases with other students, but are expected to develop their own
+  specific test cases as independent work.  Sharing of test cases,
+  like sharing of code, would therefore be a breach of the academic
+  integrity policies for the class.]
+
+- A description of additional properties of your implementation that
+  would be important to include in your testing if you were allowed
+  to use more than three test cases.
+
+Each of the three components listed above should be presented in a way
+that is easy for the reader to follow and understand.  We will not be
+using automated testing for this assignment, so each student is
+responsibile for ensuring that their submission provides a clear
+explanation of the solution, and a convincing argument/demonstration
+that it is working correctly.
+
+This assignment should be prepared as a single text or pdf file and
+uploaded to the D2L dropbox by 11pm on Monday, May 2.  Do not submit
+your solution as a zip file, or in any other file format.  If the
+requirement for text or pdf makes it hard for you to submit an solution
+for this assignment, please contact the instructor a minimum of five
+days before the deadline to explain the issue, and to explore options
+for submitting your solutions in a different manner (e.g., on paper).
+
+Remember that while discussion of this assignment with other students is
+permitted (with one exception noted below), the submission that you turn
+in must be your own individual work.  You should not share your code
+with other people, and you should not use code that was written by other
+people (other than the materials that have been supplied for the class,
+of course).  Anyone who is found to have cheated on this assignment will
+receive a zero score for the assignment.
+
+Please try to get started as early as possible, and don't be shy about
+asking for help if you get stuck and need further guidance or
+clarification.  We are on hand to help on the D2L discussions, during
+office hours, in class, or in person, etc.
+
+------------------------------------------------------------------------
+IMPLEMENTATION NOTES:
+
+a) [5 points]  do ... while loops
+
+This is intended as a warmup exercise; you can probably think of other
+features of Stevie whose implementation can be used as a model for this
+exercise.
+
+b) [10 points] the && and || operators
+
+The code that you generate for these operators will require the ability
+to create new basic blocks, and that may require you to make some
+changes to the general compilation rules for other constructs in
+addition to these specific operators.
+
+c) [10 points] the break and continue statements
+
+A "break" statement can be used anywhere inside a loop to exit that
+loop.  A "continue" statement can be used anywhere inside a loop to jump
+to the test that will be used to determine if another loop iteration is
+required.  If a "break" or "continue" statement appears inside nested
+loops, then it only interacts with the innermost loop.  Your
+implementation should support the use of "break" and "continue"
+statements inside both "while" and "do...while" loops.  Conceptually,
+both of these statements can be implemented very easily as a Goto; the
+biggest challenge will be to determine what the targets of those Goto
+instructions should be.  You should expect to modify the compilation
+scheme for statements to provide the extra "context" that is needed to
+support these two forms of statement.  Note that the compiler already
+includes static analysis code for statements (using the check() method)
+that will report an error if a break or continue statement is used
+outside a loop.  You are strongly encouraged to study the code for this
+aspect of static analysis and to use it as inspiration for your approach
+to code generation.
+
+d) [15 points] the switch statement
+
+A "switch" statement allows a program to jump to one of several blocks
+of code depending on the value of some particular integer-valued
+expression.  The following code shows a simple example:
+
+    switch (x) {
+      case 2 : print 22;
+               break;
+      case 3 : print 33;
+      default: print 0;
+    }
+
+This program will print "22" if "x" has value "2" at the start of the
+construct.  Inside a "switch" statement, a "break" will immediately exit
+the "switch", transferring control to the next statement.  If the code
+associated with a given label does not include a "break", then execution
+will "fall through" to the next block of code.  For example, if the
+initial value of "x" is "3" in the code above, then the program will
+print the number "33" and then continue to print "0" before exiting the
+"switch" statement.  If a "switch" statement includes a "default" case,
+as shown above, then the code for that case will be executed if none of
+the other cases apply.  If there is no "default" case, and none of the
+numbered cases match the value of the expression that it tested at the
+start of the "switch" construct, then execution will continue with the
+next statement.  The compiler includes static analysis code to ensure
+that there is at most one case with any given numeric value, and at most
+one default case.
+
+Your implementation should not rely on any particular ordering of the
+cases.  (It is not necessary for the numeric cases to appear in
+numerical order, or for the default case to appear at the end of the
+list of cases.)  For full credit, your implementation should take steps
+to ensure that the time to reach any single case will take approximately
+the same time as any other case.  For example, if there are 100
+different cases in a given switch statement, then the number of
+comparisons that is needed to reach the first case should be
+approximately the same as any other case.  (Hint: think binary search.)
+Finally, your implementation should take steps to avoid duplication of
+code.  The compiled version of a "switch" statement should only include
+one copy of the code for any given case, even if there are multiple ways
+to reach that code (for example, by a direct jump, or by falling through
+from a previous case).
+
+The cases that make up the body of a switch statement are represented
+using a collection of three abstract syntax classes.  You should expect
+that you will need to add one or more methods to those classes to
+complete your implementation.
+
+------------------------------------------------------------------------

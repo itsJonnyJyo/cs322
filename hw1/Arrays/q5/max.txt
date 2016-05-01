@@ -1,0 +1,16 @@
+procedure max(inp, ref out) {
+  out = 0;
+  var trash = 0;
+  foreach i => v in inp {
+    if (out < v) {
+      out = v;
+    }
+    else {
+      trash = v;
+    }
+  }
+  print out;
+}
+var out = 0;
+//max([1, 4, 3], out);
+

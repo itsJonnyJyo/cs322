@@ -1,0 +1,17 @@
+procedure reverse(inp, ref out) {
+  out = [];
+  var arr = [];
+  foreach i => v in inp {
+    if (i == 0) {
+      out = [v];
+    }
+    else {
+      arr = [v];
+      out = arr + out;
+    }
+  }
+  print out;
+}
+var out = 0;
+//reverse([1, 4, 3], out);
+

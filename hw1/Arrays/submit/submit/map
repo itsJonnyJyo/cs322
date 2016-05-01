@@ -1,0 +1,11 @@
+procedure map(f, inp, ref out) {
+  out = [];
+  var arr = [];
+  foreach i => v in inp {
+    out = out + [(f @ v)];
+  }
+  print out;
+}
+var out = 0;
+//map((\x -> x*x), [1, 2, 3], out);
+

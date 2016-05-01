@@ -1,0 +1,11 @@
+procedure mapAndSum(f, array, ref out) {
+  out = 0;
+  foreach i => v in array {
+    out = out + (f @ v);
+  }
+}
+var r = 0;
+mapAndSum((\x -> x), [1..10], r);
+print r;
+mapAndSum((\y -> y*y), [1,2,3], r);
+print r;
