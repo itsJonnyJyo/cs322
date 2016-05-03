@@ -348,11 +348,6 @@ class LAnd extends LogicBinExpr {
                                 prog.block(new Immed(reg, 1, got)),
                                 prog.block(new Immed(reg, 0, got))))),
                                 prog.block(new Immed(reg, 0, got))));
-    /*
-    System.err.println("LAnd compile() method NOT IMPLEMENTED");
-    System.exit(1);
-    return next; // not reached
-    */
   }
 }
 

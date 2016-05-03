@@ -756,9 +756,46 @@ class Switch extends Stmt {
   }
 
   Code compile(Program prog, Code next, Code breakNext, Code continueNext) {
-    System.err.println("DoWhile compile() method NOT IMPLEMENTED");
-    System.exit(1);
-    return next; // not reached
+    Tmp reg = new Tmp();
+    Tmp tmp = new Tmp();
+    //Tmp reg2 = new Tmp();
+    int n       = -1;
+    Block nxt   = prog.block(next);
+    Goto got    = new Goto(nxt);
+    Block tst   = prog.block();
+    Code  loop  = new Goto(tst);
+              // add cond @ start of tst.set that will
+              // check for end or default
+      //new Cond(new immed(prog, tst, new Op(
+      tst.set(test.compileTo(prog, 
+                   tmp, 
+                   cases[++n].getNum(prog, 
+                            reg, 
+                            new Op(reg, tmp, '=', reg, 
+                                new Cond(reg, 
+                                    prog.block(cases[n].body.compile(prog, 
+                                                             compile2(prog,
+                                                                      got, 
+                                                                      n,
+                                                                      got,
+                                                                      continueNext),
+                                                             breakNext, continueNext)),
+                                   prog.block(loop))))));
+    return loop;
+  }
+
+  Code compile2(Program prog, Code next, int element, Code breakNext, Code continueNext) {
+    if (cases.length <= element+1) {
+      return next;
+    } else {
+        return compile2(prog, 
+                   new Goto(prog.block(cases[element+1].body.compile(prog, 
+                                                                     next, 
+                                                                     breakNext,
+                                                                     continueNext))),
+                   element+1, breakNext, continueNext);
+    
+    }
   }
 }
 
@@ -781,6 +818,10 @@ abstract class Case {
   abstract void distinctFrom(Case that) throws StaticError;
   abstract void notCaseFor(int num)     throws StaticError;
   abstract void notDefault()            throws StaticError;
+  
+  Code getNum(Program prog, Tmp reg, Code next) {
+    return null;
+  }
 }
 
 class NumCase extends Case {
@@ -805,8 +846,13 @@ class NumCase extends Case {
     }
   }
 
+
   void notDefault() throws StaticError {
     /* this is not a default case, so no action is required. */
+  }
+
+  Code getNum(Program prog, Tmp reg, Code next) {
+    return new Immed(reg, num, next);
   }
 }
 
