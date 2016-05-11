@@ -1,0 +1,174 @@
+------------------------------------------------------------------------
+CS322 Languages and Compiler Design II                        Homework 3
+------------------------------------------------------------------------
+
+This homework is intended to develop and test your understanding of
+assembly code generation and the implementation of functions.  There are
+three exercises, all based on the StevieFun compiler that is available
+from D2L.  The StevieFun compiler can be configured for either a Linux
+or Mac OS X based computer.  It requires an x86_64 processor and assumes
+a System V compatible ABI.  Other platforms are not supported.  That
+said, you should be able to run the StevieFun compiler on a wider range
+of machines, so long as they support Java; you just shouldn't expect to
+be able to compile and run the generated code.  For the purposes of this
+assignment, in any places where it matters, you should assume that the
+StevieFun compiler is configured for use in a LINUX environment, as in
+the CS LinuxLab.
+
+------------------------------------------------------------------------
+Question 1:
+-----------
+The supplied code for StevieFun includes abstract syntax for "for"
+loops, including code for parsing and lexical analysis, but does not
+provide an implementation for the compile() compilation scheme.  Study
+the definition of the "For" class in Src.java and the implementations of
+compile() for other forms of statement (the implementation for While is
+likely to be particularly relevant) and then replace body of the
+compile() method in the "For" class with an appropriate implementation.
+Test your solution to ensure that it works correctly.
+
+[5 points] Once you have a working solution, put a copy of your source
+code for that method, **including careful comments*** in a file called
+"forcompile.txt".  The contents of this file should be of the form,
+without any additional code or content outside the braces:
+
+  boolean compile(Assembly a, Frame f) {
+    <your implementation here>
+  }
+
+
+------------------------------------------------------------------------
+Question 2:
+-----------
+A large collection of Stevie programs have been written to test the
+basic functionality of StevieFun.  Most of these programs do not do
+anything useful; a lot of them don't even terminate properly because
+they use too much stack space.  But there was one particular test
+program, goldenticket.stv, that produced some interesting results.
+Unfortunately, through a sad and unlikely chain of events, the original
+source code for all of these programs was lost.  (Let's just say that
+I'm going to be a lot more careful next time I edit a Makefile...)
+
+At first, I was just very sad about this.  But then I realized that I
+still have the generated assembly code for all of these programs.  And
+perhaps, with your help, it will be possible to recover all of the
+original source programs.  To share out the work fairly, I've picked
+out one of the generated assembly language programs for each of you
+to work on.  The programs are all different, but they have the same
+level of complexity.  You can get a copy of the program that I picked
+out for by logging in to the LinuxLab and typing:
+
+    cp ~mpj/hw3/PSUID.s .
+
+where PSUID is your nine digit PSUID.
+
+Your task now is to study the code in that file and try, as best you
+can, to reconstruct the original source code from which it was
+generated.  To accomplish this, you will need to use your understanding
+of x86_64 assembly language and of the conventions of the System V ABI.
+You are also strongly encouraged to use StevieFun directly as you work
+to solve this problem.  For example, if you think you know what the
+original source might have looked like, then you could store it in a
+file called "solution.stv", try to compile it using "java StevieFun <
+solution.stv", and then compare the output (in demo.s) with the code in
+your PSUID.s file (hint: you could use the diff command to help with
+this).  You could also use StevieFun to explore questions along the
+lines of "what code does the compiler generate when I write XXX in a
+StevieFun program?" Do not expect to get everything right first time: be
+prepared to iterate, to try multiple experiments, and to break the task
+down in to multiple steps, focussing on different sections of code at a
+time.  Do not worry about trying to run the original assembly code
+program; chances are that it won't do anything interesting.
+
+[16 points] Try to get as close as you can to finding a StevieFun source
+file whose compilation produces exactly the same assembly code as your
+PSUID.s file.  (It won't be possible to get an exact match because the
+two assembly language files will differ in their first line: a simple
+".file" directive that will show different names.)  Place your solution
+in a file called "solution.stv".
+
+[4 points] At the top of your "solution.stv" file, add some comments
+(you can use the standard /* ... */ form of comments, for example) to
+describe how the original source program might differ from your solution
+in FOUR (or more!) distinct ways that are impossible for you to
+determine given only the assembly code in your PSUID.s file.
+
+
+------------------------------------------------------------------------
+Question 3:
+-----------
+Make a copy of the following StevieFun source code in a file called
+"sample.stv" (or, on a LinuxLab machine, take a direct copy of the
+original source file from ~mpj/hw3/sample.stv.)
+
+  void main() {
+    int x = 25;
+    print byref(x, 23);
+    print x;
+  }
+
+  int byref(int x, int y) {
+    redirect(x);
+    redirect(y);
+    return x + y;
+  }
+
+  void redirect(int x) {
+    increment(x);
+  }
+
+  void increment(int y) {
+    y = y + 1;
+  }
+
+Run this code through the StevieFun compiler to generate assembly code
+"demo.s" and save a copy of that in two files, one called "byvalue.s"
+and one called "byref.s".  Now edit the latter, making as few changes as
+possible, so that all parameters are passed using call-by-reference
+instead of call-by-value.  (NOTE: you are definitely NOT expected to
+modify the StevieFun compiler to do this.)
+
+You should be able to compile and run the code in "byref.s" using the
+following commands in the StevieFun directory to confirm that your new
+version works correctly.
+
+   gcc -o demo byref.s runtime.c
+   ./demo
+
+Add comments to your "byref.s" (you can begin each line of comment with
+a "#" character) to:
+
+1) [5 points] highlight the minimal set of changes that you made to the
+original assembly code to support call-by-reference;
+
+2) [2 points] describe the result that is produced by running your
+modified assembly code in "byref.s", and justify that it is the correct
+output; and
+
+3) [3 points] identify three or more distinct examples of problems with
+the original generated code where you think that a more sophisticated
+compiler should be able to generate significantly better assembly code
+output.  Pick the most compelling examples that you can find and label
+them in the source code with the commented strings "OPPORTUNITY 1",
+"OPPORTUNITY 2", and "OPPORTUNITY 3", each followed by an explanation of
+the specific problem that you have identified and the ways in which you
+think the code could be improved at that point.
+
+
+------------------------------------------------------------------------
+How to submit:
+--------------
+When you have completed your answers to each part of this assignment,
+place copies of your solutions in a directory and use the following
+command to create a zip file that packages all three solutions in to
+a single file:
+
+    zip -9 PSUID.zip forcompile.txt solution.stv byref.s
+
+Do not include additional files in your submission.
+
+Once you have completed this step, you should upload your zip file
+(no other file formats will be accepted) in to the dropbox on D2L
+prior to the deadline at NOON on Monday, May 16.
+
+------------------------------------------------------------------------
