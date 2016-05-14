@@ -1,0 +1,46 @@
+//reverse engineering Q2.s
+
+//xinitGlobals:
+int nicks = 10;
+int que   = 73*2;
+int thu   = 0;
+boolean x = false;
+
+void main() {
+  //l1
+  while (nicks == que) {
+    //jz l0
+    que = que - 24601; 
+    print que;
+  }
+  print ((nicks + 1)-23);
+  print horn(6*que, 4);
+}
+
+int maze(int z) {
+  if (z==3) {
+    return nicks*z;
+  } else {
+    return maze(z-12);
+  }
+}
+
+//use all 'argument' registers + one more(g)
+boolean draw(int a, int b, int c, int d, int e, int f, int g) {
+
+  int temp = (d-e)+5+a;
+  // 'orl'
+  if (x) {
+    print 978457164;
+  }
+    //need g to force a '16(%rbp)' access.
+    //reason: 6 arg regs; g is num 7,
+    //therefore g is explicitly stored on the stack
+    int temp2 = (b+b)+g;
+    return temp2 == temp;
+}
+
+int horn(int a, int y) {
+  int retVal = que*y;
+  return maze(99*retVal);
+}
