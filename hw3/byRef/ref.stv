@@ -1,0 +1,10 @@
+void main() {
+  int x = 5;
+
+  incriment(x);
+  print x;
+}
+
+void incriment(int x) {
+  x = x + 1;
+}

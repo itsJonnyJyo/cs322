@@ -1,0 +1,7 @@
+void main() {
+  int[] a = new int[10];
+
+  print length(a);
+  a[0] = 5;
+  print length(a);
+}

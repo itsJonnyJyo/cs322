@@ -1,0 +1,40 @@
+    // 978457164
+    int nicks = 10;
+
+    void main() {
+      while ((nicks == que)) {
+        que = (que - 24601);
+        print que;
+      }
+      print ((nicks + 1) - 23);
+      print horn((6 * que), 4);
+    }
+
+    int que = (73 * 2);
+
+    int maze(int arc) {
+      if ((arc == 3)) {
+        return (nicks * arc);
+      } else {
+        return maze((arc - 12));
+      }
+    }
+
+    boolean thu = false;
+
+    boolean draw(int w, int a, int ray, int wonder, int uma, int tar, int m) {
+      int mario = (((wonder - uma) + 5) + w);
+      if (x) {
+        print 978457164;
+      }
+      int bowser = (m + (a + a));
+      return (bowser == mario);
+    }
+
+    int horn(int d, int smith) {
+      int v = (que * smith);
+      return maze((99 * v));
+    }
+
+    boolean x = false;
+

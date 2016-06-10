@@ -1,0 +1,31 @@
+  boolean compile(Assembly a, Frame f) {
+    //use two labels just like 'while' loop
+    String lab1 = a.newLabel();
+    String lab2 = a.newLabel();
+    //First, before jumping to 'test', evalaute the 'init' expression,
+    //if the source code provided an 'init'.
+    if (init!=null) {
+      init.compileExpr(a, f);
+    }
+    //The second label will contain the 'test'. Jump to it.
+    a.emit("jmp", lab2);
+    //The label for the body is above the test. Execution of the
+    //generated assembly will initially jump over it to the 'test',
+    // and then may jump back up to the body depending on 'test'.
+    a.emitLabel(lab1);
+    body.compileBlock(a, f);
+    //The 'step'(generally an inc/dec operation) will be posted just
+    //after the 'body'.
+    if (step!=null) {
+      step.compileExpr(a, f);
+    }
+    //the test portion will live in the second label
+    a.emitLabel(lab2);
+    //if there is no test, assume an infinite loop
+    if (test==null) {
+      a.emit("jmp", lab1);
+    } else {
+      test.branchTrue(a, f, lab1);
+    }
+    return true;
+  }
